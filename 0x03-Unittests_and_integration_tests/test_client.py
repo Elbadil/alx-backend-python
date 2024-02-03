@@ -66,6 +66,16 @@ class TestGithubOrgClient(unittest.TestCase):
             mock_property.assert_called_once()
             self.assertEqual(repos_list, get_json_names)
 
+    @parameterized.expand([
+        ({"license": {"key": "my_license"}}, "my_license", True),
+        ({"license": {"key": "other_license"}}, "my_license", False),
+    ])
+    def test_has_license(self, repo, license, return_value):
+        """Tests for the has_license method"""
+        orgs = GithubOrgClient('google')
+        result = orgs.has_license(repo, license)
+        self.assertEqual(result, return_value)
+
 
 if __name__ == '__main__':
     unittest.main()
