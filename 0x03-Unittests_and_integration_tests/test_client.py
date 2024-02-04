@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Unit tests for GithubOrgClient class"""
 import unittest
-from parameterized import parameterized
+from parameterized import parameterized, parameterized_class
 from unittest.mock import patch, Mock, PropertyMock
 from client import GithubOrgClient
+from fixtures import TEST_PAYLOAD
 
 
 class TestGithubOrgClient(unittest.TestCase):
@@ -75,6 +76,48 @@ class TestGithubOrgClient(unittest.TestCase):
         orgs = GithubOrgClient('google')
         result = orgs.has_license(repo, license)
         self.assertEqual(result, return_value)
+
+
+@parameterized_class(
+    ('org_payload', 'repos_payload', 'expected_repos', 'apache2_repos'),
+    [(
+        TEST_PAYLOAD[0][0],
+        TEST_PAYLOAD[0][1],
+        TEST_PAYLOAD[0][2],
+        TEST_PAYLOAD[0][3]
+    )]
+)
+class TestIntegrationGithubOrgClient(unittest.TestCase):
+    """Integration test for the GithubOrgClient class"""
+
+    @classmethod
+    def setUpClass(cls):
+        """Setting up the requests.get Mock"""
+        cls.get_patcher = patch('requests.get')
+        cls.mock_requests_get = cls.get_patcher.start()
+        cls.mock_requests_get.side_effect = cls._mock_requests_get
+
+    def test_public_repos(self):
+        """tests for the public_repos method with data from fixture.py"""
+        google = GithubOrgClient('google')
+        result = google.public_repos()
+        self.assertEqual(result, self.expected_repos)
+
+    @classmethod
+    def tearDownClass(cls):
+        """Stops the patch after all test methods have run"""
+        cls.get_patcher.stop()
+
+    @classmethod
+    def _mock_requests_get(cls, url):
+        """Custom side_effect for requests.get based on different scenarios"""
+        split_url = url.split('/')
+        if split_url[-1] == 'google':
+            return Mock(json=lambda: cls.org_payload)
+        elif split_url[-1] == 'repos':
+            return Mock(json=lambda: cls.repos_payload)
+        else:
+            raise ValueError(f"Unexpected URL: {url}")
 
 
 if __name__ == '__main__':
