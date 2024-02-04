@@ -103,6 +103,13 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         result = google.public_repos()
         self.assertEqual(result, self.expected_repos)
 
+    def test_public_repos_with_license(self):
+        """tests for the public_repos with license
+        method with data from fixture.py"""
+        google = GithubOrgClient('google')
+        result = google.public_repos(license="apache-2.0")
+        self.assertEqual(result, self.apache2_repos)
+
     @classmethod
     def tearDownClass(cls):
         """Stops the patch after all test methods have run"""
